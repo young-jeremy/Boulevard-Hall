@@ -1,0 +1,546 @@
+
+#ifdef __APPLE_CC__
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
+#include <windows.h>
+//this is the code for the spinning action
+static bool spinning = true;
+
+//This is the number of frames per second to render.
+static const int FPS = 60;
+//the angle of rotation must be known
+static GLfloat angleOfRotation=0.0;
+
+
+// Clears the window and draws the tetrahedron.  The tetrahedron is  easily
+// specified with a triangle strip, though the specification really isn't very
+// easy to read.
+
+
+//instantiate a class
+class RenderState {
+ public:
+   float mouseX,mouseY,cameraX,cameraY;
+   bool mouseLeftDown, mouseRightDown;
+   RenderState () {
+     this->mouseX = 0;
+     this->mouseY = 0;
+     this->mouseLeftDown = false;
+     this->mouseRightDown = false;
+     this->cameraX = 0.0f;
+     this->cameraY = 0.0f;
+   }
+
+};
+RenderState rs;
+
+//another function to be included in the reshapeFunction as a parameter
+void reshape(GLint h, GLint w)
+{
+    glViewport(0,0,h,w);
+    GLfloat aspect=(GLfloat)w/(GLfloat)h;
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    if(w<=h)
+    {
+        glOrtho(-50.0, 50.0, -50.0/aspect, 50.0/aspect, -1.0, 1.0);
+    }
+    else{
+            glOrtho(-50.0*aspect, 50.0*aspect, -50.0, 50.0, -1.0, 1.0);
+
+    }
+
+
+}
+
+
+void display() {
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  // Draw a white grid "floor" for the boulevard hall  to sit on.
+  glColor3f(1.0, 1.0, 1.0);
+  glBegin(GL_LINES);
+  for (GLfloat i = -2.5; i <= 2.5; i += 0.25) {
+    glVertex3f(i, 0, 2.5); glVertex3f(i, 0, -2.5);
+    glVertex3f(2.5, 0, i); glVertex3f(-2.5, 0, i);
+  }
+  glEnd();
+//drawing the back side
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(-0.5, 0, -2);
+    glColor3f(1, 0, 1); glVertex3f(0.5, 0, -2);
+    glColor3f(0, 1, 0); glVertex3f(0.5, 1, -2);
+    glColor3f(0, 0, 1); glVertex3f(-0.5, 1, -2);
+  glEnd();
+
+//the front side the rectangular part from the flt
+
+
+
+//the plane covering the left side from the front which is in red
+glBegin(GL_QUADS);
+        glColor3f(0, 1, 1); glVertex3f(0, 0, -2);
+        glColor3f(1, 1, 1); glVertex3f(-1.3, 0, 0);
+        glColor3f(1, 0, 0); glVertex3f(-1.3, 1.5, 0);
+        glColor3f(1, 0, 0); glVertex3f(0, 1, -2);
+
+    glEnd();
+//the plane covering the top, designated as red
+/*
+glBegin(GL_QUADS);
+        glColor3f(0, 0, 1); glVertex3f(0, 1, -2);
+        glColor3f(1, 1, 1); glVertex3f(-1.3, 1.5, 0);
+        glColor3f(1, 0, 0); glVertex3f(2, 1.5, 0);
+        glColor3f(1, 1, 0); glVertex3f(1, 1, -2);
+
+    glEnd();
+
+*/
+
+//the top part where y is extended, top of the pillar on top of the elevator at the left side
+glBegin(GL_QUADS);
+        glColor3f(1, 0, 1);glVertex3f(-0.80,1.6,-0.1);
+        glColor3f(1, 1, 0);glVertex3f(-0.95,1.6,0.12);
+        glColor3f(1, 0, 0);glVertex3f(-0.65,1.6,0.21);
+        glColor3f(1, 1, 1);glVertex3f(-0.5,1.6,-0.057);
+glEnd();
+
+
+//the lower base where the y should be extrapolated from- the left plane covering the pillar from the base to the top
+glBegin(GL_QUADS);
+        glColor3f(1, 1, 1);glVertex3f(-0.80,0,-0.05);
+        glColor3f(1, 1, 0);glVertex3f(-0.95,0,0.12);
+        glColor3f(1, 1, 0);glVertex3f(-0.65,0,0.21);
+        glColor3f(1, 1, 0);glVertex3f(-0.5,0,-0.1);
+glEnd();
+
+//the other side of the left pillar of the left elevator
+glBegin(GL_QUADS);
+        glColor3f(1, 1, 0);glVertex3f(-0.80,0,0);
+        glColor3f(1, 1, 0);glVertex3f(-0.95,0,0.12);
+        glColor3f(1, 1, 0);glVertex3f(-0.95,1.6,0.12);
+        glColor3f(1, 1, 0);glVertex3f(-0.80,1.6,0.12);
+glEnd();
+
+// the front part of the left elevator
+glBegin(GL_QUADS);
+        glColor3f(0, 1, 1);glVertex3f(-0.95,0,0.12);
+        glColor3f(0, 0, 0);glVertex3f(-0.65,0,0.21);
+        glColor3f(1, 0, 0);glVertex3f(-0.65,1.6,0.21);
+        glColor3f(1, 0, 1);glVertex3f(-0.95,1.6,0.12);
+glEnd();
+
+
+
+//the right of the left pillar the left pillar side carrying the elevator
+glBegin(GL_QUADS);
+        glColor3f(1, 1, 1);glVertex3f(-0.65,0,0.21);
+        glColor3f(0, 0, 1);glVertex3f(-0.5,0,-0.1);
+        glColor3f(1, 0, 0);glVertex3f(-0.5,1.6,-0.1);
+        glColor3f(0, 1, 0);glVertex3f(-0.65,1.6,0.21);
+glEnd();
+
+// the part beyond the left elevator
+glBegin(GL_QUADS);
+        glColor3f(0,1,1); glVertex3f(-1.0,0,0);
+        glColor3f(0,1,0);glVertex3f(-0.95,0,0);
+        glColor3f(0,0,1);glVertex3f(-0.95,1.5,0);
+        glColor3f(1,0,1);glVertex3f(-1.0,1.5,0);
+    glEnd();
+
+//the right side extending from the left elevator towards the back
+glBegin(GL_QUADS);
+        glColor3f(0,1,1); glVertex3f(-1.0,0,-0.35);
+        glColor3f(0,1,0);glVertex3f(-1.0,0,-0.3);
+        glColor3f(0,0,1);glVertex3f(-1,1.5,-0.3);
+        glColor3f(1,0,1);glVertex3f(-1.0,1.5,-0.35);
+    glEnd();
+//the sideways extension from front
+glBegin(GL_QUADS);
+        glColor3f(0,1,1); glVertex3f(-1.03,0,-0.35);
+        glColor3f(0,1,0);glVertex3f(-1.03,0,-0.30);
+        glColor3f(0,0,1);glVertex3f(-1.0,0,-0.30);
+        glColor3f(1,0,1);glVertex3f(-1.0,1.5,-0.30);
+        glColor3f(1,0,1);glVertex3f(-1.03,1.5,-0.30);
+        glColor3f(1,0,1);glVertex3f(-1.03,1.5,-0.35);
+
+
+
+    glEnd();
+
+
+//the right side
+//the right pillar carrying the elevators from the base
+glBegin(GL_QUADS);
+        glColor3f(0.3,1,0.7); glVertex3f(0.5,0,-0.057);
+        glColor3f(0.8,0.3,0.2);glVertex3f(0.65,0,0.21);
+        glColor3f(0.8,0.9,0.7);glVertex3f(0.95,0,0.12);
+        glColor3f(0.66,0.45,0.7);glVertex3f(0.8,0,-0.1);
+    glEnd();
+//the right elevator pillar on the top
+glBegin(GL_QUADS);
+        glColor3f(0.3,0.8,0.7); glVertex3f(0.5,1.6,-0.057);
+        glColor3f(0.6,0.5,0.2);glVertex3f(0.65,1.6,0.21);
+        glColor3f(0.3,0.9,0.7);glVertex3f(0.95,1.6,0.12);
+        glColor3f(0.4,0.8,0.1);glVertex3f(0.80,1.6,-0.1);
+    glEnd();
+
+
+    //the left wall of the right pillar carrying the elevator
+glBegin(GL_QUADS);
+        glColor3f(0,1,0.7); glVertex3f(0.5,0,-0.057);
+        glColor3f(0,1,0.2);glVertex3f(0.65,0,0.21);
+        glColor3f(0.8,0.9,0.7);glVertex3f(0.65,1.6,0.21);
+        glColor3f(0.11,0.45,1);glVertex3f(0.5,1.6,-0.057);
+    glEnd();
+
+    // the front side of the elevator carrying the right elevator
+glBegin(GL_QUADS);
+        glColor3f(0,1,0.7); glVertex3f(0.65,0,0.21);
+        glColor3f(0,1,0.2);glVertex3f(0.95,0,0.12);
+        glColor3f(0.8,0.9,0.7);glVertex3f(0.95,1.6,0.12);
+        glColor3f(0.11,0.45,1);glVertex3f(0.65,1.6,0.21);
+    glEnd();
+
+
+//the right side of the left elevator
+glBegin(GL_QUADS);
+        glColor3f(0,1,1); glVertex3f(0.95,0,0.12);
+        glColor3f(1,1,0);glVertex3f(0.80,0,-0.1);
+        glColor3f(1,0,0);glVertex3f(0.80,1.6,-0.1);
+        glColor3f(1,1,1);glVertex3f(0.95,1.6,0.12);
+    glEnd();
+
+    //the part after the elevator
+glBegin(GL_QUADS);
+        glColor3f(0,1,1); glVertex3f(0.80,0,0);
+        glColor3f(0,1,0);glVertex3f(1,0,0);
+        glColor3f(0,0,1);glVertex3f(1,1.5,0);
+        glColor3f(1,0,1);glVertex3f(0.80,1.5,0);
+    glEnd();
+
+//the part backwards from the  right part of the elevator that extends
+glBegin(GL_QUADS);
+        glColor3f(0,1,1); glVertex3f(1,0,0);
+        glColor3f(0,1,1);glVertex3f(1,0,-0.3);
+        glColor3f(0,1,1);glVertex3f(1,1.5,-0.3);
+        glColor3f(1,1,1);glVertex3f(1,1.5,0);
+    glEnd();
+
+//the sideways extensions
+glBegin(GL_QUADS);
+        glColor3f(0,1,1); glVertex3f(1,0,-0.3);
+        glColor3f(1,1,0);glVertex3f(1.03,0,-0.3);
+        glColor3f(0,0,1);glVertex3f(1.03,1.5,-0.3);
+        glColor3f(1,0,1);glVertex3f(1.0,1.5,-0.3);
+glEnd();
+
+
+
+glBegin(GL_QUADS);
+        glColor3f(1,1,1);glVertex3f(1.03,0,-0.30);
+        glColor3f(1,0,1);glVertex3f(1.03,0,-0.40);
+        glColor3f(1,0,1);glVertex3f(1.03,1.5,-0.40);
+        glColor3f(1,0,1);glVertex3f(1.03,1.5,-0.30);
+
+glEnd();
+
+
+
+
+//THE BACK SIDE
+
+//the bigger surface area
+
+glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.6, 0, -2);
+    glColor3f(1, 0, 1); glVertex3f(-0.6, 0, -2);
+    glColor3f(1, 1, 1); glVertex3f(-0.6, 1, -2);
+    glColor3f(1, 0, 1); glVertex3f(0.6, 1, -2);
+  glEnd();
+
+  //the back extension bottom from the wider area
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.5, 0, -2);
+    glColor3f(1, 0, 1); glVertex3f(0.5, 0, -2.1);
+    glColor3f(1, 1, 0); glVertex3f(-0.5, 0, -2.1);
+    glColor3f(1, 0, 1); glVertex3f(-0.5, 0, -2);
+  glEnd();
+
+  //the wall of the back
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.5, 0, -2);
+    glColor3f(1, 0, 1); glVertex3f(-0.5, 0, -2);
+    glColor3f(0, 1, 0); glVertex3f(-0.5, 1, -2);
+    glColor3f(0, 0, 1); glVertex3f(0.5, 1, -2);
+  glEnd();
+
+  //the right side wall at the first extension of the side
+  /*
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.5, 0, -2);
+    glColor3f(1, 0, 1); glVertex3f(0.5, 0, -2.1);
+    glColor3f(0, 1, 0); glVertex3f(0.5, 1, -2.1);
+    glColor3f(0, 0, 1); glVertex3f(0.5, 1, -2);
+  glEnd();
+*/
+  //the left side of the fist extension of the left side
+  /*
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(-0.4, 0, -2);
+    glColor3f(1, 0, 1); glVertex3f(-0.4, 0, -2.1);
+    glColor3f(1, 1, 0); glVertex3f(-0.4, 1, -2.1);
+    glColor3f(, 0, 1); glVertex3f(-0.4, 1, -2);
+  glEnd();
+  */
+
+  //the bottom finally joins the top surface area
+  /*
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.4, 1, -2);
+    glColor3f(1, 0, 1); glVertex3f(0.4, 1, -2.1);
+    glColor3f(1, 1, 0); glVertex3f(-0.4, 1, -2.1);
+    glColor3f(1, 0, 1); glVertex3f(-0.4, 1, -2);
+  glEnd();
+  */
+
+//the second extension from the first one, the bottom
+glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.3, 0, -2.1);
+    glColor3f(1, 0, 1); glVertex3f(0.3, 0, -2.2);
+    glColor3f(1, 1, 0); glVertex3f(-0.3, 0, -2.2);
+    glColor3f(1, 0, 1); glVertex3f(-0.3, 0, -2.1);
+  glEnd();
+
+  //the right side second extension wall
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.3, 0, -2.1);
+    glColor3f(1, 0, 1); glVertex3f(0.3, 0, -2.2);
+    glColor3f(0, 1, 0); glVertex3f(0.3, 1, -2.2);
+    glColor3f(0, 0, 1); glVertex3f(0.3, 1, -2.1);
+  glEnd();
+
+  //the second extension joining the roof of the back; the top
+
+    glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.3, 1, -2.1);
+    glColor3f(1, 0, 1); glVertex3f(0.3, 1, -2.2);
+    glColor3f(1, 1, 0); glVertex3f(-0.3, 1, -2.2);
+    glColor3f(1, 1, 1); glVertex3f(-0.3, 1, -2.1);
+  glEnd();
+
+  //the roof to the bottom
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.3, 0, -2.2);
+    glColor3f(1, 1, 1); glVertex3f(-0.3, 0, -2.2);
+    glColor3f(0, 1, 0); glVertex3f(-0.3, 1, -2.2);
+    glColor3f(1, 0, 1); glVertex3f(0.3, 1, -2.2);
+  glEnd();
+
+
+  //the frieze from the right side bigger than the second extension top
+
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.3, 1, -2.1);
+    glColor3f(1, 0, 1); glVertex3f(0.3, 0, -2.1);
+    glColor3f(0, 1, 0); glVertex3f(0.3, 0, -2.2);
+    glColor3f(0, 0, 1); glVertex3f(0.3, 1, -2.2);
+  glEnd();
+
+
+  //the freeze of the left side joining the roof top
+  //the frieze from the right side bigger than the second extension top
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(-0.4, 0, -2.1);
+    glColor3f(1, 0, 1); glVertex3f(-0.4, 0, -2.2);
+    glColor3f(0, 1, 0); glVertex3f(-0.4, 1, -2.2);
+    glColor3f(0, 0, 1); glVertex3f(-0.4, 1, -2.1);
+  glEnd();
+
+  //the frieze to hold the plane perpendicular to the first extension
+  /*
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.4, 1, -2);
+    glColor3f(1, 0, 1); glVertex3f(0.4, 0, -2);
+    glColor3f(0, 1, 0); glVertex3f(0.5, 0, -2);
+    glColor3f(0, 0, 1); glVertex3f(0.5, 1, -2);
+  glEnd();
+  */
+
+  //the  frieze to the second extension
+  /*
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(0.5, 0, -2);
+    glColor3f(1, 0, 1); glVertex3f(0.5, 0, -2.1);
+    glColor3f(0, 1, 0); glVertex3f(0.5, 1, -2.1);
+    glColor3f(0, 0, 1); glVertex3f(0.5, 1, -2);
+  glEnd();
+*/
+
+  //the left side frieze from the main wall
+  /*
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(-0.3, 1, -2.0);
+    glColor3f(1, 0, 1); glVertex3f(-0.3, 0, -2.0);
+    glColor3f(0, 1, 0); glVertex3f(-0.3, 0, -2.0);
+    glColor3f(0, 0, 1); glVertex3f(-0.3, 1, -2.0);
+  glEnd();
+  */
+
+  //the frieze to the first extension
+  /*
+  glBegin(GL_QUADS);
+    glColor3f(1, 1, 1); glVertex3f(-0.3, 1, -2.1);
+    glColor3f(1, 0, 1); glVertex3f(-0.3, 0, -2.1);
+    glColor3f(0, 1, 0); glVertex3f(-0.3, 0, -2.0);
+    glColor3f(0, 0, 1); glVertex3f(-0.3, 1, -2.0);
+  glEnd();
+  */
+
+  glFlush();
+  glutSwapBuffers();
+}
+
+
+// Sets up global attributes like clear color and drawing color, enables and
+// initializes any needed modes (in this case we want backfaces culled), and
+// sets up the desired projection and modelview matrices. It is cleaner to
+// define these operations in a function separate from main().
+void init() {
+
+
+  // Set the current clear color to sky blue and the current drawing color to
+  // white.
+
+//glClearColor(0.1, 0.39, 0.88, 1.0);
+  glColor3f(1.0, 1.0, 1.0);
+  glShadeModel(GL_FLAT);
+  RenderState* rsp= new RenderState();
+  rs=*rsp;
+
+
+  //making the callbacks work , uncomment to see
+glLoadIdentity();
+    glPushMatrix();
+
+    glRotatef(rs.cameraY, 0, 1, 0);
+    glRotatef(rs.cameraX, 1, 0, 0);
+    glTranslatef(0, 0, -10.0f);
+
+    glPopMatrix();
+
+  // Tell the rendering engine not to draw backfaces.  Without this code,rs
+  // all four faces of the tetrahedron would be drawn and it is possible
+  // that faces farther away could be drawn after nearer to the viewer.
+  // Since there is only one closed polyhedron in the whole scene,
+  // eliminating the drawing of backfaces gives us the realism we need.
+  // THIS DOES NOT WORK IN GENERAL.
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
+
+  // Set the camera lens so that we have a perspective viewing volume whose
+  // horizontal bounds at the near clipping plane are -2..2 and vertical
+  // bounds are -1.5..1.5.  The near clipping plane is 1 unit from the camera
+  // and the far clipping plane is 40 units away.
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glFrustum(2, 2, -1.5, 1.5, 1, 40);
+
+    //glScalef (2.0, 4.0, 6.0);
+
+
+
+//this helps us to watch from the right side of the camera
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(40.0, 4.0/3.0, 1, 40);//the first parameter specifies the camera view and distance of the object
+
+
+  //Position camera at (4, 6, 5) looking at (0, 0, 0) with the vector
+  //<0, 1, 0> pointing upward.
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  gluLookAt(0, 5, -5, 0, 0, 0, 0, 1, 0);
+//
+
+  // Set up transforms so that the tetrahedron which is defined right at
+  // the origin will be rotated and moved into the view volume.  First we
+  // rotate 70 degrees around y so we can see a lot of the left side.
+  // Then we rotate 50 degrees around x to "drop" the top of the pyramid
+  // down a bit.  Then we move the object back 3 units "into the screen".
+
+/*
+    glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      glTranslatef(0, 0, -5);
+      glRotatef(50, 1, 0, 0);
+      glRotatef(70, 0, 0, 0);
+
+*/
+    }
+
+
+
+
+void timer(int v) {
+  if (spinning) {
+   angleOfRotation += 1.0;
+    if (angleOfRotation > 360.0) {
+      angleOfRotation -= 360.0;
+    }
+    glutPostRedisplay();
+  }
+  glutTimerFunc(1000/FPS, timer, v);
+}
+
+void mouse(int button, int state, int x, int y) {
+  rs.mouseX=x;
+  rs.mouseY=y;
+  if(button==GLUT_LEFT_BUTTON)
+  {
+      if(state==GLUT_DOWN)
+      {
+          rs.mouseLeftDown=true;
+      }
+      else if(state=GLUT_UP)
+      {
+          rs.mouseLeftDown=false;
+      }
+
+  }
+}
+
+
+
+//instantiating the function fir the motion callback
+void motionCallBack(int x, int y)
+{
+    if(rs.mouseLeftDown)
+    {
+        rs.cameraX+=(x-rs.mouseX);
+        rs.cameraY+=(y-rs.mouseY);
+        rs.cameraY=y;
+        rs.mouseX=x;
+    }
+}
+
+
+// Initializes GLUT, the display mode, and main window; registers callbacks;
+// does application initialization; enters the main event loop.
+int main(int argc, char** argv) {
+  glutInit(&argc, argv);
+  glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+  glutInitWindowPosition(80, 80);
+  glutInitWindowSize(800, 600);
+  glutCreateWindow("Boulevard Hall");
+  glutDisplayFunc(display);
+  init();
+  glutTimerFunc(100, timer, 0);
+  glutMouseFunc(mouse);
+  glutMotionFunc(motionCallBack);
+
+  glutMainLoop();
+}
+
