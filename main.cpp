@@ -1069,7 +1069,7 @@ glRotatef(horiz_angle, 0, 1, 0);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  gluLookAt(0, 5,7, 0, 0, 0, 0, 1, 0);
+  gluLookAt(0, -1,1, 0, 3, 0, 0, 1, 0);
 
 }
 
@@ -1103,7 +1103,7 @@ int main(int argc, char** argv) {
     //glutMouseFunc();
     //glutMotionFunc();
     //glDepthFunc();
-    glClearColor(1,1,1,1);
+    //glClearColor(1,1,1,1);
 
 
 
